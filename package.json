@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest --coverage"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.2",
@@ -45,6 +46,7 @@
     "hardhat": "^2.11.1",
     "hardhat-gas-reporter": "^1.0.8",
     "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
     "postcss": "^8.4.21",
     "react-test-renderer": "^18.2.0",
     "solidity-coverage": "^0.8.0",
