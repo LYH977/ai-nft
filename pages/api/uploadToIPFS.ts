@@ -14,9 +14,8 @@ export default async function handler(
 ) {
   const { image, name } = req.body
   try {
-    console.log((image as string).substring(0, 10))
+    const data = image.replace(/^data:image(.+);base64,/, '')
 
-    const data = image.replace(/^data:image\/jpeg;base64,/, '')
     const buff = Buffer.from(data, 'base64')
     const stream = Readable.from(buff)
     const options = {
@@ -28,11 +27,11 @@ export default async function handler(
       },
     }
 
-    const result = await pinata.pinFileToIPFS(stream, options)
-    console.log(result)
+    const { IpfsHash } = await pinata.pinFileToIPFS(stream, options)
 
-    res.status(200).json({ name: 'success' })
+    res.status(200).json({ IpfsHash })
   } catch (e) {
-    res.status(500).json({ name: 'fail' })
+    console.error(e)
+    res.status(500)
   }
 }

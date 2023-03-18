@@ -3,123 +3,96 @@ import Head from 'next/head'
 import axios from 'axios'
 import { useEffect, useRef, useState } from 'react'
 import { ethers } from 'ethers'
-import { Web3Provider } from '@ethersproject/providers'
-import React from 'react'
 
 //smart contract abi
 import NFT from '../artifacts/contracts/NFT.sol/NFT.json'
 import { base64 } from '@/public/mock/base64'
 
-// const inter = Inter({ subsets: ['latin'] })
-const JWT = `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`
+import { ToastContainer, toast, ToastOptions } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
+const toastProps: ToastOptions = { theme: "colored" }
 
 export default function Home() {
   const [image, setImage] = useState('')
   const [file, setfile] = useState<any>()
 
-  const [name, setName] = useState('')
+  const [imgName, setImgName] = useState('')
   const [desc, setDesc] = useState('')
+
 
   const provider = useRef<any>()
   const smartContract = useRef<any>()
 
 
+  const isGenerateBtnDisabled = !(imgName && desc)
+  const isMintBtnDisabled = !(image)
+
+
   useEffect(() => {
-    try {
-      loadBlockchainData()
-    } catch (e) {
-      console.log(e)
-    }
+    loadBlockchainData()
   }, [])
 
   const loadBlockchainData = async () => {
     if ((window as any).ethereum) {
-
       provider.current = new ethers.providers.Web3Provider((window as any).ethereum)
-      const network = await provider.current.getNetwork()
+      // const network = await provider.current.getNetwork()
       smartContract.current = new ethers.Contract(
         '0x5fbdb2315678afecb367f032d93f642f64180aa3',//contract address
         NFT.abi,
         provider.current
       )
-      console.log(smartContract.current)
     }
   }
 
-  const generateImage = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const generateImage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       const response = await axios.post(
-        `https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY}}`,
-          },
-          method: 'POST',
-          inputs: desc,
-        },
-        { responseType: 'blob' }
+        `./api/generateImage`, { description: desc }
       )
-      const file = new File([response.data], "image.png", {
-        type: "image/png",
-      });
-      // saving the file in a state
-      setfile(response.data);
-      const url = URL.createObjectURL(response.data);
-      // console.log(url)
-      console.log(url);
-      setImage(url);
-
+      if (response.status === 200) {
+        setImage(response.data.base64);
+        toast.success(`Generated image "${imgName}"`, toastProps)
+      }
+      else {
+        toast.error('Image generation service is currently unavailable. Please come back later.', toastProps)
+      }
     } catch (err) {
-      console.log(err)
+      console.error(err)
+      toast.error('Oops. something is wrong now. Please come back later.', toastProps)
     }
-
   }
+
 
   const mintNFT = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
-    const file2 = new File([base64], "image.png", {
-      type: "image/png",
-    });
-
-    const formData = new FormData();
-    // formData.append('file', file)
-    formData.append('file', file2)
-    const metadata = JSON.stringify({
-      name,
-      author: 'LYH'
-    });
-    formData.append('pinataMetadata', metadata);
-    const options = JSON.stringify({
-      cidVersion: 0,
-    })
-    formData.append('pinataOptions', options);
     try {
-      const res = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
-        //@ts-ignore
-        maxBodyLength: "Infinity",
-        headers: {
-          //@ts-ignore
-          'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
-          Authorization: JWT
-        }
-      });
-      //@ts-ignore
-      console.log(`multipart/form-data; boundary=${formData._boundary}`)
-      console.log({ formData })
-      console.log(res.data);
-      // const IpfsHash = res.data.IpfsHash
-      // const signer = await provider.current.getSigner()
-      // const transaction = await smartContract.current
-      //   .connect(signer)
-      //   .mint(`https://gateway.pinata.cloud/ipfs/${IpfsHash}`, { value: ethers.utils.parseUnits('1', 'ether') })
-      // await transaction.wait()
-      // console.log('done')
+      const response = await axios.post(
+        `./api/uploadToIPFS`, { name: imgName, image }
+      )
+      if (response.status === 200) {
+        const IpfsHash = response.data.IpfsHash
+        const signer = await provider.current.getSigner()
+        const transaction = await smartContract.current
+          .connect(signer)
+          .mint(`https://gateway.pinata.cloud/ipfs/${IpfsHash}`, { value: ethers.utils.parseUnits('1', 'ether') })
+        await transaction.wait()
+        toast.success('Minted NFT!', toastProps)
+      } else {
+        toast.error('Ipfs upload service is currently unavailable. Please come back later.', toastProps)
+      }
 
-    } catch (error) {
-      console.log(error);
+    } catch (e) {
+      console.error(e)
+      toast.error('Oops. something is wrong now. Please come back later.', toastProps)
     }
+
   }
+
+
+
   return (
     <>
       <Head>
@@ -149,22 +122,21 @@ export default function Home() {
         // }}
         >Ai NFT</h1>
         <div>
-          <form className='flex flex-col gap-8'>
+          <form className='flex flex-col gap-8' onSubmit={ generateImage }>
             <label className='flex items-center'>
               Name
-              <input className='bg-gray-100' name='name' onChange={ (e) => setName(e.target.value) } value={ name } />
+              <input className='bg-gray-100' name='imgName' onChange={ (e) => setImgName(e.target.value) } value={ imgName } />
             </label>
             <label className='flex items-center'>
               Description
               <textarea className='bg-gray-100' name='description' onChange={ (e) => setDesc(e.target.value) } value={ desc } />
             </label>
-            <button onClick={ generateImage }>Generate Image</button>
-
-
-            <button className='bg-gray-100' onClick={ mintNFT }>Mint NFT</button>
+            <button type='submit' disabled={ isGenerateBtnDisabled }>Generate Image</button>
+            <button type='button' disabled={ isMintBtnDisabled } className='bg-gray-100' onClick={ mintNFT }>Mint NFT</button>
 
           </form>
-          { image ? <img src={ image } alt='fdfd' height={ 200 } width={ 200 } /> : <img src="./test.jpg" alt='fdfd' height={ 200 } width={ 200 } /> }
+          { image ? <img src={ image } alt='fdfd' height={ 200 } width={ 200 } /> : <p>empty</p> }
+          <ToastContainer />
         </div>
 
       </main>

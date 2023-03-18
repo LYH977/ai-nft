@@ -9,6 +9,8 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const { description } = req.body
+  console.log({ description })
+
   try {
     const response = await axios.post(
       HUGGING_FACE_API,
@@ -21,15 +23,18 @@ export default async function handler(
       },
       { responseType: 'arraybuffer' }
     )
+    if (response.status === 200) {
+      const type = response.headers['content-type']
+      const data = response.data
 
-    const type = response.headers['content-type']
-    const data = response.data
-
-    const base64data = Buffer.from(data).toString('base64')
-    const img = `data:${type};base64,` + base64data
-    res.status(200).json({ status: 'SUCCESS', data: img })
+      const base64data = Buffer.from(data).toString('base64')
+      const img = `data:${type};base64,` + base64data
+      res.status(200).json({ base64: img })
+    } else {
+      res.status(503)
+    }
   } catch (err) {
-    console.log(err)
-    res.status(500).json({ status: 'FAIL' })
+    console.error(err)
+    res.status(500)
   }
 }

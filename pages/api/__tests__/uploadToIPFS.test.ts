@@ -1,77 +1,41 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import handler from '../uploadToIPFS'
-// import { mock } from 'jest-mock-extended'
-import pinataSDK from '@pinata/sdk'
-import { Readable } from 'stream'
+import { base64 } from '@/public/mock/base64'
 
-jest.mock('@pinata/sdk')
+const mockIpfsHash = 'dfdfdfdf'
+let mockPinFileToIPFS = () => ({ IpfsHash: mockIpfsHash })
+jest.mock('@pinata/sdk', () => {
+  return function (this: any) {
+    this.pinFileToIPFS = async function () {
+      return mockPinFileToIPFS()
+    }
+  }
+})
 
-describe('handler', () => {
+describe('uploadIpfs function', () => {
   const req: jest.Mocked<NextApiRequest> = {
-    body: { name: 'dfdf', image: 'dfdfdf' },
+    body: { name: 'mock name', image: base64 },
   } as jest.Mocked<NextApiRequest>
 
   const res: jest.Mocked<NextApiResponse> = {
     status: jest.fn(() => res),
     json: jest.fn(),
   } as unknown as jest.Mocked<NextApiResponse>
-  const mockPinata = pinataSDK as jest.Mocked<typeof pinataSDK>
-  const mockStream = Readable.from('')
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it('df', () => {
-    expect(true).toBeTruthy()
+  it('should return hash upon SUCCESSFUL api', async () => {
+    await handler(req, res)
+    expect(res.status).toHaveBeenCalledWith(200)
   })
-  //   it('should handle the request', async () => {
-  //     // Set up the request and response mocks
-  //     mockReq.body = { image: 'base64-encoded-data', name: 'test-image' }
-  //     mockRes.status.mockReturnThis()
 
-  //     // Set up the pinataSDK mock
-  //     mockPinata.pinFileToIPFS.mockResolvedValueOnce({ IpfsHash: 'QmHash' })
-
-  //     // Call the handler with the mock request and response
-  //     await handler(req, res)
-
-  //     // Check that the response status was set to 200
-  //     expect(mockRes.status).toHaveBeenCalledWith(200)
-
-  //     // Check that the response JSON was sent with the expected data
-  //     expect(mockRes.json).toHaveBeenCalledWith({ name: 'success' })
-
-  //     // Check that the pinataSDK function was called with the expected arguments
-  //     expect(mockPinata.pinFileToIPFS).toHaveBeenCalledWith(
-  //       mockStream,
-  //       expect.objectContaining({
-  //         pinataMetadata: {
-  //           name: 'test-image',
-  //         },
-  //         pinataOptions: {
-  //           cidVersion: 0,
-  //         },
-  //       })
-  //     )
-  //   })
-
-  //   it('should handle errors', async () => {
-  //     // Set up the request and response mocks
-  //     mockReq.body = { image: 'base64-encoded-data', name: 'test-image' }
-  //     mockRes.status.mockReturnThis()
-
-  //     // Set up the pinataSDK mock to throw an error
-  //     const mockError = new Error('Pinata error')
-  //     mockPinata.pinFileToIPFS.mockRejectedValueOnce(mockError)
-
-  //     // Call the handler with the mock request and response
-  //     await handler(mockReq, mockRes)
-
-  //     // Check that the response status was set to 500
-  //     expect(mockRes.status).toHaveBeenCalledWith(500)
-
-  //     // Check that the response JSON was sent with the expected data
-  //     expect(mockRes.json).toHaveBeenCalledWith({ name: 'fail' })
-  //   })
+  it('should return hash upon FAILED api', async () => {
+    mockPinFileToIPFS = () => {
+      throw new Error()
+    }
+    await handler(req, res)
+    expect(res.status).toHaveBeenCalledWith(500)
+  })
 })
