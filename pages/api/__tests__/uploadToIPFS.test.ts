@@ -1,9 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import handler from '../uploadToIPFS'
 import { base64 } from '@/public/mock/base64'
+import { mockCreatedAt, mockDesc, mockImgName, mockTokenURI } from '@/mockData'
 
-const mockIpfsHash = 'dfdfdfdf'
-let mockPinFileToIPFS = () => ({ IpfsHash: mockIpfsHash })
+let mockPinFileToIPFS = () => ({
+  IpfsHash: mockTokenURI,
+  Timestamp: mockCreatedAt,
+})
 jest.mock('@pinata/sdk', () => {
   return function (this: any) {
     this.pinFileToIPFS = async function () {
@@ -14,7 +17,7 @@ jest.mock('@pinata/sdk', () => {
 
 describe('uploadIpfs function', () => {
   const req: jest.Mocked<NextApiRequest> = {
-    body: { name: 'mock name', image: base64 },
+    body: { name: mockImgName, image: base64, description: mockDesc },
   } as jest.Mocked<NextApiRequest>
 
   const res: jest.Mocked<NextApiResponse> = {

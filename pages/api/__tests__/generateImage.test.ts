@@ -2,15 +2,14 @@ import axios from 'axios'
 import handler from '../generateImage'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { HUGGING_FACE_API } from '@/utils/api'
-import { base64 } from '@/public/mock/base64'
+import { mockDesc } from '@/mockData'
 
 jest.mock('axios')
 const mockedAxios = axios as jest.Mocked<typeof axios>
-const mockInputs = 'green apple'
 
 describe('generateImage function', () => {
   const req: jest.Mocked<NextApiRequest> = {
-    body: { description: mockInputs },
+    body: { description: mockDesc },
   } as jest.Mocked<NextApiRequest>
 
   const res: jest.Mocked<NextApiResponse> = {
@@ -35,7 +34,7 @@ describe('generateImage function', () => {
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY}}`,
         },
         method: 'POST',
-        inputs: mockInputs,
+        inputs: mockDesc,
       },
       { responseType: 'arraybuffer' }
     )

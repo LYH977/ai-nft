@@ -8,11 +8,24 @@ const pinata = new pinataSDK({
   pinataSecretApiKey: process.env.NEXT_PUBLIC_PINATA_SECRET_API_KEY,
 })
 
+// type KeyValues = {
+//   [key: string]: string | number | null
+// }
+// interface PinataPinOptions {
+//   pinataMetadata?: {
+//     name?: string
+//     keyvalues?: KeyValues
+//   }
+//   pinataOptions?: {
+//     cidVersion?: number
+//   }
+// }
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { image, name } = req.body
+  const { image, name, description } = req.body
   try {
     const data = image.replace(/^data:image(.+);base64,/, '')
 
@@ -21,17 +34,19 @@ export default async function handler(
     const options = {
       pinataMetadata: {
         name,
+
+        keyvalues: { description },
       },
       pinataOptions: {
-        cidVersion: 0 as const,
+        cidVersion: 0,
       },
     }
-
-    const { IpfsHash } = await pinata.pinFileToIPFS(stream, options)
-
-    res.status(200).json({ IpfsHash })
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    const { IpfsHash, Timestamp } = await pinata.pinFileToIPFS(stream, options)
+    res.status(200).json({ IpfsHash, Timestamp })
   } catch (e) {
     console.error(e)
-    res.status(500)
+    res.status(500).json({ error: 'Internal Server Problem' })
   }
 }

@@ -6,6 +6,8 @@ import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import { base64 } from '@/public/mock/base64'
 import { ethers } from 'ethers'
+import { formatAddress } from '@/utils/formatter'
+import { mockCreatedAt, mockDesc, mockImgName, mockOwnerOf, mockTokenURI, mockTotalSupply } from '@/mockData'
 
 jest.mock('axios')
 
@@ -13,26 +15,63 @@ const mockedAxios = axios as jest.Mocked<typeof axios>
 
 describe('Homepage Testing', () => {
 
+
+    const getTextbox = (name: 'name' | 'description') => screen.getByRole('textbox', {
+        name: new RegExp(name, 'i')
+    })
+
+    const getButton = (name: 'generate image' | 'mint nft') => screen.getByRole('button', {
+        name: new RegExp(name, 'i')
+    })
+
+    const getServerErrorResponse = () => ({
+        status: 500
+    })
+
+    const getServerSuccessResponse = (param: object) => ({
+        data: param,
+        status: 200
+    })
+    beforeAll(() => {
+        Object.defineProperty(window, 'ethereum', {
+            value: {},
+        })
+        const mockSigner = {
+            // getAddress: jest.fn(() => Promise.resolve(mockOwnerOf)),
+            getAddress: async function () {
+                return mockOwnerOf
+            },
+
+        };
+        //@ts-ignore
+        jest.spyOn(ethers.providers, 'Web3Provider').mockImplementation(function (this) {
+            this.getSigner = async function () {
+                return mockSigner
+            }
+        });
+        //@ts-ignore
+        jest.spyOn(ethers, 'Contract').mockImplementation(function (this) {
+            this.index = 0
+            this.connect = function () {
+                return { mint() { return { async wait() { return 'nothing' } } } }
+            }
+            this.totalSupply = async function () {
+                return mockTotalSupply
+            }
+
+            this.tokenURI = async function () {
+                this.index++
+                return mockTokenURI + this.index
+            }
+
+            this.ownerOf = async function () {
+                return mockOwnerOf
+            }
+        }
+        );
+    })
     describe('Form Part', () => {
-        const mockImgName = 'My apple';
-        const mockDesc = 'green apple'
 
-        const getTextbox = (name: 'name' | 'description') => screen.getByRole('textbox', {
-            name: new RegExp(name, 'i')
-        })
-
-        const getButton = (name: 'generate image' | 'mint nft') => screen.getByRole('button', {
-            name: new RegExp(name, 'i')
-        })
-
-        const getServerErrorResponse = () => ({
-            status: 500
-        })
-
-        const getServerSuccessResponse = (param: object) => ({
-            data: param,
-            status: 200
-        })
 
         // beforeEach(() => {
         //     jest.clearAllMocks();
@@ -41,29 +80,7 @@ describe('Homepage Testing', () => {
         //     jest.restoreAllMocks();
         // });
 
-        beforeAll(() => {
-            Object.defineProperty(window, 'ethereum', {
-                value: {},
-            })
-            const mockSigner = {
-                getAddress: jest.fn(() => Promise.resolve('0x123')),
-            };
-            //@ts-ignore
-            jest.spyOn(ethers.providers, 'Web3Provider').mockImplementation(function (ethereum) {
-                //@ts-ignore
-                this.getSigner = function () {
-                    jest.fn().mockResolvedValue(mockSigner)
-                }
-            });
-            //@ts-ignore
-            jest.spyOn(ethers, 'Contract').mockImplementation(function (a, b, c) {
-                //@ts-ignore
-                this.connect = function () {
-                    return { mint() { return { async wait() { return 'nothing' } } } }
-                }
-            }
-            );
-        })
+
 
         describe('Generate Image Button', () => {
 
@@ -133,7 +150,7 @@ describe('Homepage Testing', () => {
                 await user.type(getTextbox('name'), mockImgName)
                 await user.type(getTextbox('description'), mockDesc)
                 await user.click(getButton('generate image'))
-                mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ IpfsHash: 'xxx' }))
+                mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ IpfsHash: mockTokenURI, Timestamp: mockCreatedAt }))
                 await user.click(getButton('mint nft'))
                 expect(screen.getByText('Minted NFT!')).toBeInTheDocument()
             })
@@ -164,4 +181,39 @@ describe('Homepage Testing', () => {
 
 
     })
+
+    describe('Collection Part', () => {
+        it('should show collection of NFTs', async () => {
+            const user = userEvent.setup()
+            mockedAxios.get.mockResolvedValue(getServerSuccessResponse({ name: mockImgName, createdAt: mockCreatedAt, description: mockDesc }))
+
+            render(<Home />)
+            await user.click(screen.getByRole('button', {
+                name: /check nft/i
+            }))
+            expect(screen.getAllByText(`Owner: ${formatAddress(mockOwnerOf)}`)).toHaveLength(mockTotalSupply)
+            expect(screen.getAllByRole('img', { name: mockImgName })).toHaveLength(mockTotalSupply)
+            expect(screen.getAllByText(`Description: ${mockDesc}`)).toHaveLength(mockTotalSupply)
+            expect(screen.getAllByText(`Created At ${mockCreatedAt}`)).toHaveLength(mockTotalSupply)
+
+        })
+
+
+        it('should add newly minted into collection upon SUCCESSFUL minting', async () => {
+            mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ base64 }))
+            const user = userEvent.setup()
+            render(<Home />)
+            await user.type(getTextbox('name'), mockImgName)
+            await user.type(getTextbox('description'), mockDesc)
+            await user.click(getButton('generate image'))
+            mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ IpfsHash: mockTokenURI, Timestamp: mockCreatedAt }))
+            await user.click(getButton('mint nft'))
+            expect(screen.getByText('Minted NFT!')).toBeInTheDocument()
+            expect(screen.getByText(`Owner: ${formatAddress(mockOwnerOf)}`)).toBeInTheDocument()
+            expect(screen.getByRole('img', { name: mockImgName })).toBeInTheDocument()
+            expect(screen.getByText(`Description: ${mockDesc}`)).toBeInTheDocument()
+            expect(screen.getByText(`Created At ${mockCreatedAt}`)).toBeInTheDocument()
+        })
+    })
 })
+

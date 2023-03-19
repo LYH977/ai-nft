@@ -10,19 +10,20 @@ import { base64 } from '@/public/mock/base64'
 
 import { ToastContainer, toast, ToastOptions } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { formatAddress } from '@/utils/formatter'
 
 
 const toastProps: ToastOptions = { theme: "colored" }
 
 export default function Home() {
   const [image, setImage] = useState('')
-  const [file, setfile] = useState<any>()
 
   const [imgName, setImgName] = useState('')
   const [desc, setDesc] = useState('')
 
+  const [provider, setProvider] = useState<any>()
+  const [collection, setCollection] = useState<any>([])
 
-  const provider = useRef<any>()
   const smartContract = useRef<any>()
 
 
@@ -36,22 +37,27 @@ export default function Home() {
 
   const loadBlockchainData = async () => {
     if ((window as any).ethereum) {
-      provider.current = new ethers.providers.Web3Provider((window as any).ethereum)
-      // const network = await provider.current.getNetwork()
+      const newProvider: any = new ethers.providers.Web3Provider((window as any).ethereum)
+      setProvider(newProvider)
+      // const network = await provider.getNetwork()
       smartContract.current = new ethers.Contract(
         '0x5fbdb2315678afecb367f032d93f642f64180aa3',//contract address
         NFT.abi,
-        provider.current
+        newProvider
       )
+      console.log('connected')
     }
   }
 
   const generateImage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
+      console.log('start generating')
       const response = await axios.post(
         `./api/generateImage`, { description: desc }
       )
+      console.log('done generating')
+
       if (response.status === 200) {
         setImage(response.data.base64);
         toast.success(`Generated image "${imgName}"`, toastProps)
@@ -69,18 +75,34 @@ export default function Home() {
   const mintNFT = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     try {
+      console.log('start uploading to ipfs')
+
       const response = await axios.post(
-        `./api/uploadToIPFS`, { name: imgName, image }
+        `./api/uploadToIPFS`, { name: imgName, image, description: desc }
       )
+
       if (response.status === 200) {
-        const IpfsHash = response.data.IpfsHash
-        const signer = await provider.current.getSigner()
+        console.log('done uploading to ipfs. start minting')
+        console.log(response.data)
+        const { IpfsHash, Timestamp } = response.data
+        const signer = await provider.getSigner()
         const transaction = await smartContract.current
           .connect(signer)
           .mint(`https://gateway.pinata.cloud/ipfs/${IpfsHash}`, { value: ethers.utils.parseUnits('1', 'ether') })
         await transaction.wait()
         toast.success('Minted NFT!', toastProps)
+        setCollection([{
+          owner: await (await provider.getSigner()).getAddress(),
+          path: image,
+          name: imgName,
+          createdAt: Timestamp,
+          description: desc
+
+        }, ...collection])
+
       } else {
+        console.log('failed uploading to ipfs')
+
         toast.error('Ipfs upload service is currently unavailable. Please come back later.', toastProps)
       }
 
@@ -103,24 +125,10 @@ export default function Home() {
       </Head>
       <main>
         <h1
-        // onClick={ async () => {
-        //   // const gg = await smartContract.current.totalSupply()
-        //   // console.log(gg.toString())
 
-        //   // const ownerAddress = await smartContract.current.ownerOf(1)
-        //   // console.log(ownerAddress)
-
-        //   // const cost = await smartContract.current.cost()
-
-        //   // const tokenURI = await smartContract.current.tokenURI(1)
-        //   // console.log(tokenURI)
-
-        //   const response = await axios.post('/api/mint', { image: base64 });
-        //   console.log(response)
-        //   // setImage(response.data)
-
-        // }}
         >Ai NFT</h1>
+
+
         <div>
           <form className='flex flex-col gap-8' onSubmit={ generateImage }>
             <label className='flex items-center'>
@@ -136,6 +144,62 @@ export default function Home() {
 
           </form>
           { image ? <img src={ image } alt='fdfd' height={ 200 } width={ 200 } /> : <p>empty</p> }
+
+
+          <button onClick={ async () => {
+            const total = await smartContract.current.totalSupply()
+            const ownerPromises = []
+            const pathPromises = []
+            const newCollection: any = []
+
+
+
+            const lastIndex = Number(total)
+
+            for (let i = 1; i <= lastIndex; i++) {
+              // ownerPromises.push(smartContract.current.ownerOf(i))
+              // pathPromises.push(smartContract.current.tokenURI(i))
+
+              const path = await (smartContract.current.tokenURI(i))
+              const hash = path.split('/').pop()
+              const { data: { name, createdAt, description } } = await axios.get('./api/getMetadata?hash=' + hash)
+              newCollection.push({
+                owner: await (smartContract.current.ownerOf(i)),
+                path,
+                name,
+                createdAt,
+                description
+
+              })
+
+            }
+
+
+
+            setCollection(newCollection)
+
+
+
+
+
+
+          } }>Check nft</button>
+
+          { collection.length > 0 && collection.map((nft: any, index: number) => {
+            // console.log(collection?.[1])
+            // return <p key={ index }>33</p>
+            return (
+              <div key={ nft.path }>
+
+                <img src={ nft.path } alt={ nft.name } height={ 200 } width={ 200 } />
+                <p>Owner: { formatAddress(nft.owner) }</p>
+                <p>Name: { nft.name }</p>
+                <p>Description: { nft.description }</p>
+                <p>Created At { nft.createdAt }</p>
+
+              </div>
+            )
+          }) }
           <ToastContainer />
         </div>
 
