@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import Home from '..'
 import '@testing-library/jest-dom'
 import userEvent from '@testing-library/user-event'
@@ -33,9 +33,7 @@ describe('Homepage Testing', () => {
         status: 200
     })
     beforeAll(() => {
-        Object.defineProperty(window, 'ethereum', {
-            value: {},
-        })
+        (window as any).ethereum = {}
         const mockSigner = {
             // getAddress: jest.fn(() => Promise.resolve(mockOwnerOf)),
             getAddress: async function () {
@@ -70,16 +68,43 @@ describe('Homepage Testing', () => {
         }
         );
     })
+
+    describe('Connect Crypto Wallet Button', () => {
+        beforeAll(() => {
+            mockedAxios.get.mockResolvedValue(getServerSuccessResponse({ name: mockImgName, createdAt: mockCreatedAt, description: mockDesc }))
+
+        })
+        it('should automatically connect crypto wallet and becomes disabled', () => {
+            render(<Home />)
+            waitFor(() => {
+                expect(screen.getByRole('button', { name: formatAddress(mockOwnerOf) })).toBeDisabled()
+            })
+        })
+        it('should connect crypto wallet abd become disabled upon click if it is not connected previously', async () => {
+            delete (window as any).ethereum
+            const user = userEvent.setup()
+
+            render(<Home />)
+            expect(screen.getByRole('button', { name: 'Connect' })).toBeInTheDocument();
+            (window as any).ethereum = {}
+
+            await user.click(screen.getByRole('button', { name: 'Connect' }));
+            waitFor(() => {
+                expect(screen.getByRole('button', { name: formatAddress(mockOwnerOf) })).toBeDisabled()
+            })
+        })
+    })
     describe('Form Part', () => {
 
-
         // beforeEach(() => {
-        //     jest.clearAllMocks();
+        //     // jest.clearAllMocks();
         // });
         // afterEach(() => {
-        //     jest.restoreAllMocks();
+        //     // jest.restoreAllMocks();
         // });
-
+        beforeAll(() => {
+            mockedAxios.get.mockResolvedValue(getServerSuccessResponse({ name: mockImgName, createdAt: mockCreatedAt, description: mockDesc }))
+        })
 
 
         describe('Generate Image Button', () => {
@@ -91,7 +116,7 @@ describe('Homepage Testing', () => {
                 expect(generateBtn).toBeDisabled()
                 await user.type(getTextbox('name'), mockImgName)
                 await user.type(getTextbox('description'), mockDesc)
-                expect(generateBtn).not.toBeDisabled()
+                expect(generateBtn).toBeEnabled()
             })
 
             it('should update image upon SUCCESSFUL image generation API', async () => {
@@ -101,7 +126,8 @@ describe('Homepage Testing', () => {
                 await user.type(getTextbox('name'), mockImgName)
                 await user.type(getTextbox('description'), mockDesc)
                 await user.click(getButton('generate image'))
-                expect(screen.getByRole('img')).toBeInTheDocument()
+
+                expect(screen.getByRole('img', { name: 'image based on description' })).toBeInTheDocument()
                 expect(screen.getByText(`Generated image "${mockImgName}"`)).toBeInTheDocument()
             })
 
@@ -129,7 +155,8 @@ describe('Homepage Testing', () => {
         })
 
         describe('Mint NFT Button', () => {
-            it('should enable Mint NFT button only when image is shown in the document', async () => {
+
+            it('should enable Mint NFT button only when image is shown in the document and crypto wallet is detected', async () => {
 
                 mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ base64 }))
                 const user = userEvent.setup()
@@ -140,10 +167,27 @@ describe('Homepage Testing', () => {
                 await user.type(getTextbox('name'), mockImgName)
                 await user.type(getTextbox('description'), mockDesc)
                 await user.click(getButton('generate image'))
-                expect(mintBtn).not.toBeDisabled()
+                expect(mintBtn).toBeEnabled()
+            })
+
+            it('should disable Mint NFT button when image is shown in the document but crypto wallet is NOT DETECTED', async () => {
+                delete (window as any).ethereum
+                mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ base64 }))
+                const user = userEvent.setup()
+                render(<Home />)
+                const mintBtn = getButton('mint nft')
+                expect(mintBtn).toBeDisabled()
+
+                await user.type(getTextbox('name'), mockImgName)
+                await user.type(getTextbox('description'), mockDesc)
+                await user.click(getButton('generate image'))
+                expect(mintBtn).toBeDisabled();
+                (window as any).ethereum = {}
             })
 
             it('should show success message upon SUCCESSFUL minting', async () => {
+                // (window as any).ethereum = {}
+
                 mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ base64 }))
                 const user = userEvent.setup()
                 render(<Home />)
@@ -183,18 +227,36 @@ describe('Homepage Testing', () => {
     })
 
     describe('Collection Part', () => {
-        it('should show collection of NFTs', async () => {
-            const user = userEvent.setup()
+        beforeAll(() => {
             mockedAxios.get.mockResolvedValue(getServerSuccessResponse({ name: mockImgName, createdAt: mockCreatedAt, description: mockDesc }))
+        })
+        it('should show message and hide collection part when crypto wallet is not connected', () => {
+            delete (window as any).ethereum
+            render(<Home />)
+            expect(screen.getByText('You need to connect to crypto wallet to view NFT collection')).toBeInTheDocument();
+            (window as any).ethereum = {}
+        })
+
+        it('should show collection of NFTs', () => {
 
             render(<Home />)
-            await user.click(screen.getByRole('button', {
-                name: /check nft/i
-            }))
-            expect(screen.getAllByText(`Owner: ${formatAddress(mockOwnerOf)}`)).toHaveLength(mockTotalSupply)
-            expect(screen.getAllByRole('img', { name: mockImgName })).toHaveLength(mockTotalSupply)
-            expect(screen.getAllByText(`Description: ${mockDesc}`)).toHaveLength(mockTotalSupply)
-            expect(screen.getAllByText(`Created At ${mockCreatedAt}`)).toHaveLength(mockTotalSupply)
+            waitFor(() => {
+
+                expect(screen.getAllByText(`Owner: ${formatAddress(mockOwnerOf)}`)).toHaveLength(mockTotalSupply)
+            })
+            waitFor(() => {
+
+                expect(screen.getAllByRole('img', { name: mockImgName })).toHaveLength(mockTotalSupply)
+            })
+            waitFor(() => {
+
+                expect(screen.getAllByText(`Description: ${mockDesc}`)).toHaveLength(mockTotalSupply)
+            })
+            waitFor(() => {
+
+                expect(screen.getAllByText(`Created At ${mockCreatedAt}`)).toHaveLength(mockTotalSupply)
+            })
+
 
         })
 
@@ -202,17 +264,22 @@ describe('Homepage Testing', () => {
         it('should add newly minted into collection upon SUCCESSFUL minting', async () => {
             mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ base64 }))
             const user = userEvent.setup()
+            const postfix = '-test'
             render(<Home />)
-            await user.type(getTextbox('name'), mockImgName)
-            await user.type(getTextbox('description'), mockDesc)
+            await user.type(getTextbox('name'), mockImgName + postfix)
+            await user.type(getTextbox('description'), mockDesc + postfix)
             await user.click(getButton('generate image'))
             mockedAxios.post.mockResolvedValueOnce(getServerSuccessResponse({ IpfsHash: mockTokenURI, Timestamp: mockCreatedAt }))
             await user.click(getButton('mint nft'))
             expect(screen.getByText('Minted NFT!')).toBeInTheDocument()
-            expect(screen.getByText(`Owner: ${formatAddress(mockOwnerOf)}`)).toBeInTheDocument()
-            expect(screen.getByRole('img', { name: mockImgName })).toBeInTheDocument()
-            expect(screen.getByText(`Description: ${mockDesc}`)).toBeInTheDocument()
-            expect(screen.getByText(`Created At ${mockCreatedAt}`)).toBeInTheDocument()
+            waitFor(() => {
+
+                expect(screen.getByRole('img', { name: mockImgName + postfix })).toBeInTheDocument()
+            })
+            waitFor(() => {
+
+                expect(screen.getByText(`Description: ${mockDesc + postfix}`)).toBeInTheDocument()
+            })
         })
     })
 })

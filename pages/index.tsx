@@ -21,14 +21,19 @@ export default function Home() {
   const [imgName, setImgName] = useState('')
   const [desc, setDesc] = useState('')
 
-  const [provider, setProvider] = useState<any>()
+  // const [provider, setProvider] = useState<any>()
   const [collection, setCollection] = useState<any>([])
+  const [ownerAddress, setOwnerAddress] = useState<string>('')
+
+
+  const provider = useRef<any>()
 
   const smartContract = useRef<any>()
 
+  const isWalletBtnDisabled = Boolean(ownerAddress)
 
   const isGenerateBtnDisabled = !(imgName && desc)
-  const isMintBtnDisabled = !(image)
+  const isMintBtnDisabled = !image || !ownerAddress
 
 
   useEffect(() => {
@@ -37,15 +42,22 @@ export default function Home() {
 
   const loadBlockchainData = async () => {
     if ((window as any).ethereum) {
-      const newProvider: any = new ethers.providers.Web3Provider((window as any).ethereum)
-      setProvider(newProvider)
+      // const newProvider: any = new ethers.providers.Web3Provider((window as any).ethereum)
+      provider.current = new ethers.providers.Web3Provider((window as any).ethereum)
+
+      // setProvider(newProvider)
+      setOwnerAddress(await (await provider.current.getSigner()).getAddress(),)
       // const network = await provider.getNetwork()
       smartContract.current = new ethers.Contract(
         '0x5fbdb2315678afecb367f032d93f642f64180aa3',//contract address
         NFT.abi,
-        newProvider
+        provider.current
       )
-      console.log('connected')
+      toast.success('Crypto wallet is connected!', toastProps)
+      fetchNftCollection()
+    } else {
+      toast.warning('Crypto wallet is not detected!', toastProps)
+
     }
   }
 
@@ -85,14 +97,14 @@ export default function Home() {
         console.log('done uploading to ipfs. start minting')
         console.log(response.data)
         const { IpfsHash, Timestamp } = response.data
-        const signer = await provider.getSigner()
+        const signer = await provider.current.getSigner()
         const transaction = await smartContract.current
           .connect(signer)
           .mint(`https://gateway.pinata.cloud/ipfs/${IpfsHash}`, { value: ethers.utils.parseUnits('1', 'ether') })
         await transaction.wait()
         toast.success('Minted NFT!', toastProps)
         setCollection([{
-          owner: await (await provider.getSigner()).getAddress(),
+          owner: ownerAddress,
           path: image,
           name: imgName,
           createdAt: Timestamp,
@@ -113,7 +125,44 @@ export default function Home() {
 
   }
 
+  const fetchNftCollection = async () => {
+    const total = await smartContract.current.totalSupply()
+    const ownerPromises = []
+    const pathPromises = []
+    const newCollection: any = []
 
+
+
+    const lastIndex = Number(total)
+
+    for (let i = 1; i <= lastIndex; i++) {
+      // ownerPromises.push(smartContract.current.ownerOf(i))
+      // pathPromises.push(smartContract.current.tokenURI(i))
+
+      const path = await (smartContract.current.tokenURI(i))
+      const hash = path.split('/').pop()
+      const { data: { name, createdAt, description } } = await axios.get('./api/getMetadata?hash=' + hash)
+      newCollection.push({
+        owner: await (smartContract.current.ownerOf(i)),
+        path,
+        name,
+        createdAt,
+        description
+
+      })
+
+    }
+
+
+
+    setCollection(newCollection)
+
+
+
+
+
+
+  }
 
   return (
     <>
@@ -124,10 +173,8 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <h1
-
-        >Ai NFT</h1>
-
+        <h1  >Ai NFT</h1>
+        <button onClick={ loadBlockchainData } disabled={ isWalletBtnDisabled }>{ ownerAddress ? formatAddress(ownerAddress) : 'Connect' }</button>
 
         <div>
           <form className='flex flex-col gap-8' onSubmit={ generateImage }>
@@ -143,49 +190,9 @@ export default function Home() {
             <button type='button' disabled={ isMintBtnDisabled } className='bg-gray-100' onClick={ mintNFT }>Mint NFT</button>
 
           </form>
-          { image ? <img src={ image } alt='fdfd' height={ 200 } width={ 200 } /> : <p>empty</p> }
+          { image ? <img src={ image } alt={ desc } height={ 200 } width={ 200 } aria-label='image based on description' /> : <p>empty</p> }
 
-
-          <button onClick={ async () => {
-            const total = await smartContract.current.totalSupply()
-            const ownerPromises = []
-            const pathPromises = []
-            const newCollection: any = []
-
-
-
-            const lastIndex = Number(total)
-
-            for (let i = 1; i <= lastIndex; i++) {
-              // ownerPromises.push(smartContract.current.ownerOf(i))
-              // pathPromises.push(smartContract.current.tokenURI(i))
-
-              const path = await (smartContract.current.tokenURI(i))
-              const hash = path.split('/').pop()
-              const { data: { name, createdAt, description } } = await axios.get('./api/getMetadata?hash=' + hash)
-              newCollection.push({
-                owner: await (smartContract.current.ownerOf(i)),
-                path,
-                name,
-                createdAt,
-                description
-
-              })
-
-            }
-
-
-
-            setCollection(newCollection)
-
-
-
-
-
-
-          } }>Check nft</button>
-
-          { collection.length > 0 && collection.map((nft: any, index: number) => {
+          { !ownerAddress ? <p>You need to connect to crypto wallet to view NFT collection</p> : collection.length > 0 && collection.map((nft: any, index: number) => {
             // console.log(collection?.[1])
             // return <p key={ index }>33</p>
             return (
