@@ -11,7 +11,6 @@ contract NFT is ERC721URIStorage {
 
     address public owner;
     uint256 public cost;
-    string[] public allTokenURIs;
 
     constructor(
         string memory _name,
@@ -25,7 +24,6 @@ contract NFT is ERC721URIStorage {
     function mint(string memory _tokenURI) public payable {
         require(msg.value >= cost, "Ether is not enough");
         _tokenIds.increment();
-        allTokenURIs.push(_tokenURI);
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId);
         _setTokenURI(newItemId, _tokenURI);
