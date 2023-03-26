@@ -1,7 +1,7 @@
 import axios from 'axios'
 import handler from '../generateImage'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { HUGGING_FACE_API } from '@/utils/api'
+import { HUGGING_FACE_API } from '@/utils/constants'
 import { mockDesc } from '@/mockData'
 
 jest.mock('axios')

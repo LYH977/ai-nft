@@ -1,5 +1,5 @@
 import { mockCreatedAt, mockDesc, mockImgName, mockTokenURI } from '@/mockData'
-import { PINATA_PIN_LIST_API } from '@/utils/api'
+import { PINATA_PIN_LIST_API } from '@/utils/constants'
 import axios from 'axios'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import handler from '../getMetadata'

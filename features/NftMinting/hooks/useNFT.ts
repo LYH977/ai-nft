@@ -1,6 +1,5 @@
 import { ImageInfoProps } from '@/types'
 import axios from 'axios'
-import { ethers } from 'ethers'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
@@ -11,20 +10,16 @@ export const useNFT = (
 ) => {
   const [collection, setCollection] = useState<any>([])
   const [isFetchingNft, setIsFetchingNft] = useState(false)
+
   useEffect(() => {
     const fetchNftCollection = async () => {
       setIsFetchingNft(true)
       const total = await smartContract.totalSupply()
-      const ownerPromises = []
-      const pathPromises = []
       const newCollection: any = []
-
       const lastIndex = Number(total)
-
       for (let i = 1; i <= lastIndex; i++) {
         // ownerPromises.push(smartContract.ownerOf(i))
         // pathPromises.push(smartContract.tokenURI(i))
-
         const path = await smartContract.tokenURI(i)
         const hash = path.split('/').pop()
         const {
@@ -38,9 +33,8 @@ export const useNFT = (
           description,
         })
       }
-
-      setCollection(newCollection)
       setIsFetchingNft(false)
+      setCollection(newCollection)
     }
     if (smartContract) fetchNftCollection()
   }, [smartContract])
@@ -51,18 +45,15 @@ export const useNFT = (
   ) => {
     e.preventDefault()
     try {
-      console.log('start uploading to ipfs')
-
       const response = await axios.post(`./api/uploadToIPFS`, {
         name: imgName,
         image,
         description: desc,
       })
-
+      console.log({ response })
       if (response.status === 200) {
-        console.log('done uploading to ipfs. start minting')
-        console.log(response.data)
         const { IpfsHash, Timestamp } = response.data
+        const { ethers } = await import('ethers')
         const signer = await provider.getSigner()
         const transaction = await smartContract
           .connect(signer)
@@ -82,8 +73,6 @@ export const useNFT = (
           ...collection,
         ])
       } else {
-        console.log('failed uploading to ipfs')
-
         toast.error(
           'Ipfs upload service is currently unavailable. Please come back later.'
         )

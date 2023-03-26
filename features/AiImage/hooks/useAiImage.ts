@@ -1,4 +1,3 @@
-import { bigbase64 } from '@/public/mock/bigBase64'
 import { ImageInfoProps } from '@/types'
 import axios from 'axios'
 import React, { useRef, useState } from 'react'
@@ -28,18 +27,13 @@ export const useAiImage = (
     e.preventDefault()
     setLoading(LoadingStatus.GENERATING)
     try {
-      console.log('start generating')
       const response = await axios.post(`./api/generateImage`, {
         description: desc,
       })
-      console.log({ response })
-      console.log('done generating')
-      // const gg = true
 
       if (response.status === 200) {
-        // if (gg) {
         generatedImage.current = { imgName, desc }
-        // setImage(bigbase64)
+
         setImage(response.data.base64)
         setImgName('')
         setDesc('')
@@ -59,7 +53,6 @@ export const useAiImage = (
 
   const handleMintingNFT = async (e: React.MouseEvent<HTMLButtonElement>) => {
     setLoading(LoadingStatus.MINTING)
-    console.log(generatedImage.current)
     await mintNFT(e, {
       image,
       imgName: generatedImage.current.imgName,

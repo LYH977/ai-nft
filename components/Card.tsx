@@ -1,5 +1,4 @@
 import { cx } from '@/lib/cx';
-import { bigbase64 } from '@/public/mock/bigBase64';
 import { formatAddress } from '@/utils/formatter';
 import React from 'react'
 
@@ -26,8 +25,8 @@ export const Card = ({ path, name, owner, description, createdAt, ...imgProps }:
 
                 { isMinted && <>
                     <div className='flex flex-row justify-between text-xs text-gray-400' >
-                        <p title={ owner }>Owner: { formatAddress(owner as string) }</p>
-                        <p title={ createdAt }>Created at { formatter.format(new Date(createdAt as string)) }</p>
+                        <p title={ owner }>{ formatAddress(owner as string) }</p>
+                        <p title={ createdAt }>{ formatter.format(new Date(createdAt as string)) }</p>
                     </div>
                 </> }
             </div>

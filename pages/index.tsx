@@ -12,13 +12,9 @@ import { bigbase64 } from '@/public/mock/bigBase64';
 import { Collection } from '@/features/NftMinting/components/Collection';
 import { Navbar } from '@/layouts/Navbar';
 
-
-
 export default function Home() {
   const { ownerAddress, loadBlockchainData, provider, smartContract } = useBlockchain()
   const { collection, isFetchingNft, mintNFT } = useNFT(smartContract, provider, ownerAddress)
-
-
   return (
     <>
       <Head>
@@ -36,8 +32,6 @@ export default function Home() {
           <Collection ownerAddress={ ownerAddress } collection={ collection } isFetchingNft={ isFetchingNft } />
         </div>
         <ToastContainer role="alert" theme='colored' position='top-left' />
-
-
       </main>
     </>
   )

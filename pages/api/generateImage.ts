@@ -1,5 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { HUGGING_FACE_API } from '@/utils/api'
+import { HUGGING_FACE_API } from '@/utils/constants'
 import axios from 'axios'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
