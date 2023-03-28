@@ -2,13 +2,9 @@
 import Head from 'next/head'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { formatAddress } from '@/utils/formatter'
-import { Button } from '@/components/Button'
-import { Card, CardProps } from '@/components/Card'
 import { Form } from '@/features/AiImage/components/Form'
 import { useBlockchain } from '@/hooks/useBlockchain'
 import { useNFT } from '@/features/NftMinting/hooks/useNFT';
-import { bigbase64 } from '@/public/mock/bigBase64';
 import { Collection } from '@/features/NftMinting/components/Collection';
 import { Navbar } from '@/layouts/Navbar';
 

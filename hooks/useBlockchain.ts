@@ -1,11 +1,7 @@
-import {
-  HARDHAT_CONTRACT_ADDRESS,
-  SEPOLIA_CHAIN_ID,
-  SEPOLIA_CONTRACT_ADDRESS,
-} from '@/utils/constants'
+import { SEPOLIA_CHAIN_ID, SEPOLIA_CONTRACT_ADDRESS } from '@/utils/constants'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import NFT from '../artifacts/contracts/NFT.sol/NFT.json'
+import MyContract from '@/public/MyContract.json'
 
 export const useBlockchain = () => {
   const w = global.window as any
@@ -34,7 +30,7 @@ export const useBlockchain = () => {
           new ethers.Contract(
             // HARDHAT_CONTRACT_ADDRESS,
             SEPOLIA_CONTRACT_ADDRESS,
-            NFT.abi,
+            MyContract.abi,
             newProvider
           )
         )
