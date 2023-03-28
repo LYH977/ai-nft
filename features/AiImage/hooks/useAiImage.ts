@@ -1,3 +1,4 @@
+import { bigbase64 } from '@/public/mock/bigBase64'
 import { ImageInfoProps } from '@/types'
 import axios from 'axios'
 import React, { useRef, useState } from 'react'
@@ -30,11 +31,13 @@ export const useAiImage = (
       const response = await axios.post(`./api/generateImage`, {
         description: desc,
       })
-
+      // const gg = true
+      // if (gg) {
       if (response.status === 200) {
         generatedImage.current = { imgName, desc }
 
         setImage(response.data.base64)
+        // setImage(bigbase64)
         setImgName('')
         setDesc('')
         toast.success(`Generated image "${imgName}"`)
@@ -57,6 +60,7 @@ export const useAiImage = (
       image,
       imgName: generatedImage.current.imgName,
       desc: generatedImage.current.desc,
+      setImage,
     })
     setLoading(LoadingStatus.NONE)
   }
@@ -71,5 +75,7 @@ export const useAiImage = (
     image,
     generatedImage: generatedImage.current,
     loading,
+    imgName,
+    desc,
   }
 }

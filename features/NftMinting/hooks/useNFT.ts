@@ -1,3 +1,4 @@
+import { mockCreatedAt, mockTokenURI } from '@/mockData'
 import { ImageInfoProps } from '@/types'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
@@ -17,7 +18,7 @@ export const useNFT = (
       const total = await smartContract.totalSupply()
       const newCollection: any = []
       const lastIndex = Number(total)
-      for (let i = 1; i <= lastIndex; i++) {
+      for (let i = lastIndex; i > 0; i--) {
         // ownerPromises.push(smartContract.ownerOf(i))
         // pathPromises.push(smartContract.tokenURI(i))
         const path = await smartContract.tokenURI(i)
@@ -41,7 +42,7 @@ export const useNFT = (
 
   const mintNFT = async (
     e: React.MouseEvent<HTMLButtonElement>,
-    { imgName, image, desc }: ImageInfoProps
+    { imgName, image, desc, setImage }: ImageInfoProps
   ) => {
     e.preventDefault()
     try {
@@ -50,18 +51,24 @@ export const useNFT = (
         image,
         description: desc,
       })
-      console.log({ response })
+
       if (response.status === 200) {
+        // const gg = true
+        // if (gg) {
         const { IpfsHash, Timestamp } = response.data
+        //   const IpfsHash = mockTokenURI
+        //   const Timestamp = mockCreatedAt
+
         const { ethers } = await import('ethers')
         const signer = await provider.getSigner()
         const transaction = await smartContract
           .connect(signer)
           .mint(`https://gateway.pinata.cloud/ipfs/${IpfsHash}`, {
-            value: ethers.utils.parseUnits('1', 'ether'),
+            value: ethers.utils.parseUnits('0.01', 'ether'),
           })
         await transaction.wait()
         toast.success('Minted NFT!')
+        setImage('')
         setCollection((collection: any) => [
           {
             owner: ownerAddress,
