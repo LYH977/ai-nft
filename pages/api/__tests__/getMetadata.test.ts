@@ -38,7 +38,7 @@ describe('getMetadata', () => {
       `${PINATA_PIN_LIST_API}?hashContains=${mockTokenURI}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
+          Authorization: `Bearer ${process.env.PINATA_JWT}`,
         },
       }
     )

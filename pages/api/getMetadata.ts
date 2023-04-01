@@ -13,7 +13,7 @@ export default async function handler(
       `${PINATA_PIN_LIST_API}?hashContains=${hash}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
+          Authorization: `Bearer ${process.env.PINATA_JWT}`,
         },
       }
     )

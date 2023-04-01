@@ -31,7 +31,7 @@ describe('generateImage function', () => {
       HUGGING_FACE_API,
       {
         headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY}}`,
+          Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}}`,
         },
         method: 'POST',
         inputs: mockDesc,

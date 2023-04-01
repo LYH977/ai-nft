@@ -1,4 +1,4 @@
-import { SEPOLIA_CHAIN_ID, SEPOLIA_CONTRACT_ADDRESS } from '@/utils/constants'
+import { CONTRACT_ADDRESS, SEPOLIA_CHAIN_ID } from '@/utils/constants'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import MyContract from '@/public/MyContract.json'
@@ -19,7 +19,10 @@ export const useBlockchain = () => {
         const { ethers } = await import('ethers')
         const newProvider: any = new ethers.providers.Web3Provider(w.ethereum)
         const network = await newProvider.getNetwork()
-        if (network.chainId !== SEPOLIA_CHAIN_ID) {
+        if (
+          process.env.NODE_ENV === 'production' &&
+          network.chainId !== SEPOLIA_CHAIN_ID
+        ) {
           toast.warning('Sepolia testnet is not detected')
           return
         }
@@ -27,12 +30,7 @@ export const useBlockchain = () => {
         // setOwnerAddress(await (await newProvider.getSigner()).getAddress())
         setOwnerAddress(address[0])
         setSmartContract(
-          new ethers.Contract(
-            // HARDHAT_CONTRACT_ADDRESS,
-            SEPOLIA_CONTRACT_ADDRESS,
-            MyContract.abi,
-            newProvider
-          )
+          new ethers.Contract(CONTRACT_ADDRESS, MyContract.abi, newProvider)
         )
 
         toast.success('Crypto wallet is connected!')
