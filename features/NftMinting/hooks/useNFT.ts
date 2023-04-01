@@ -1,8 +1,9 @@
-import { mockCreatedAt, mockTokenURI } from '@/mockData'
-import { ImageInfoProps } from '@/types'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+
+import { mockCreatedAt, mockTokenURI } from '@/mockData'
+import { ImageInfoProps } from '@/types'
 
 export const useNFT = (
   smartContract: any,

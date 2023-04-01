@@ -1,7 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import handler from '../uploadToIPFS'
-import { base64 } from '@/public/mock/base64'
+
 import { mockCreatedAt, mockDesc, mockImgName, mockTokenURI } from '@/mockData'
+import { base64 } from '@/public/mock/base64'
+
+import handler from '../uploadToIPFS'
 
 let mockPinFileToIPFS = () => ({
   IpfsHash: mockTokenURI,

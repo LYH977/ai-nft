@@ -1,12 +1,13 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import Head from 'next/head'
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+
 import { Form } from '@/features/AiImage/components/Form'
-import { useBlockchain } from '@/hooks/useBlockchain'
-import { useNFT } from '@/features/NftMinting/hooks/useNFT';
 import { Collection } from '@/features/NftMinting/components/Collection';
+import { useNFT } from '@/features/NftMinting/hooks/useNFT';
+import { useBlockchain } from '@/hooks/useBlockchain'
 import { Navbar } from '@/layouts/Navbar';
+
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Home() {
   const { ownerAddress, loadBlockchainData, provider, smartContract } = useBlockchain()

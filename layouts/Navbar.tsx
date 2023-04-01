@@ -1,8 +1,8 @@
-import { Button } from '@/components/Button'
-import { formatAddress } from '@/utils/formatter'
 import React, { useState } from 'react'
 import { toast } from 'react-toastify'
 
+import { Button } from '@/components/Button'
+import { formatAddress } from '@/utils/formatter'
 type NavbarProps = {
     ownerAddress: string
     loadBlockchainData: () => Promise<void>

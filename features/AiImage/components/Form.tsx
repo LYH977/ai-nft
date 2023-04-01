@@ -1,9 +1,10 @@
 import { Button } from '@/components/Button'
 import { Card } from '@/components/Card'
 import { ImageInfoProps } from '@/types'
-import React from 'react'
+
 import { LoadingStatus } from '../enums'
 import { useAiImage } from '../hooks/useAiImage'
+
 import { Placeholder } from './Placeholder'
 
 type FormProps = {

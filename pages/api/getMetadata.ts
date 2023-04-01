@@ -1,6 +1,7 @@
-import { PINATA_PIN_LIST_API } from '@/utils/constants'
 import axios from 'axios'
 import type { NextApiRequest, NextApiResponse } from 'next'
+
+import { PINATA_PIN_LIST_API } from '@/utils/constants'
 
 export default async function handler(
   req: NextApiRequest,

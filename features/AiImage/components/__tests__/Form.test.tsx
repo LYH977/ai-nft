@@ -1,12 +1,15 @@
 import { render, screen } from '@testing-library/react'
-import { Form } from '../Form'
-import { useAiImage } from '../../hooks/useAiImage'
-import { base64 } from '@/public/mock/base64'
+import userEvent from '@testing-library/user-event'
+
 import { mockDesc, mockImgName, mockOwnerAddress } from '@/mockData'
+import { base64 } from '@/public/mock/base64'
+
+import { LoadingStatus } from '../../enums'
+import { useAiImage } from '../../hooks/useAiImage'
+import { Form } from '../Form'
+
 import '@testing-library/jest-dom'
 
-import userEvent from '@testing-library/user-event'
-import { LoadingStatus } from '../../enums'
 
 jest.mock('../../hooks/useAiImage')
 jest.mock('../Placeholder', () => ({ Placeholder: <div>placeholder</div> }))
@@ -58,6 +61,16 @@ describe('Form', () => {
         expect(mockUseAiImage.setDesc).toHaveBeenCalledWith(mockDesc)
     })
 
+    it('should disable both input fields upon click on generate Image button', async () => {
+        const user = userEvent.setup()
+        render(<Form mintNFT={ mockMintNFT } ownerAddress={ mockOwnerAddress } />)
+        await user.type(getTextbox('name'), mockImgName)
+        await user.type(getTextbox('description'), mockDesc)
+        await user.click(getButton('generate image'))
+        expect(getTextbox('name')).toBeDisabled()
+        expect(getTextbox('description')).toBeDisabled()
+    })
+
     it('should call the generateImage function when submitting the form', async () => {
         const user = userEvent.setup()
         render(<Form mintNFT={ mockMintNFT } ownerAddress={ mockOwnerAddress } />)
@@ -79,6 +92,19 @@ describe('Form', () => {
         expect(screen.getByText(mockDesc)).toBeInTheDocument()
         expect(getButton('mint nft')).toBeInTheDocument()
         expect(screen.queryByText('placeholder')).not.toBeInTheDocument()
+    })
+
+    it('should disable both input fields upon click on mint nft button', async () => {
+        mockUseAiImage.image = base64
+        mockUseAiImage.generatedImage = {
+            imgName: mockImgName,
+            desc: mockDesc
+        }
+        const user = userEvent.setup()
+        render(<Form mintNFT={ mockMintNFT } ownerAddress={ mockOwnerAddress } />)
+        await user.click(getButton('mint nft'))
+        expect(getTextbox('name')).toBeDisabled()
+        expect(getTextbox('description')).toBeDisabled()
     })
 
     it('should call the handleMintingNFT function when clicking the mint button', async () => {

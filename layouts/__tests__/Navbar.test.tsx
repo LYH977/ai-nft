@@ -1,10 +1,12 @@
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { toast } from 'react-toastify'
+
 import { mockOwnerAddress } from '@/mockData'
 import { formatAddress } from '@/utils/formatter'
-import { render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom'
-import userEvent from '@testing-library/user-event'
+
 import { Navbar } from '../Navbar'
-import { toast } from 'react-toastify'
+import '@testing-library/jest-dom'
 
 jest.mock('react-toastify', () => ({
     toast: {

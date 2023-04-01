@@ -1,7 +1,8 @@
-import { CONTRACT_ADDRESS, SEPOLIA_CHAIN_ID } from '@/utils/constants'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+
 import MyContract from '@/public/MyContract.json'
+import { CONTRACT_ADDRESS, SEPOLIA_CHAIN_ID } from '@/utils/constants'
 
 export const useBlockchain = () => {
   const w = global.window as any

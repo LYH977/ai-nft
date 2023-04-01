@@ -1,7 +1,5 @@
 import { Spinner } from '@/icons/Spinner'
 import { cx } from '@/lib/cx'
-import React from 'react'
-
 
 export const Button = ({ children, className, isLoading, ...props }: React.ComponentProps<'button'> & { className?: string, isLoading?: boolean }) => {
     return (

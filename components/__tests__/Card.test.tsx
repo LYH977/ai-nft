@@ -1,9 +1,12 @@
 import { render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom'
-import { Card } from '../Card'
+
 import { mockCreatedAt, mockDesc, mockImgName, mockOwnerAddress } from '@/mockData'
 import { base64 } from '@/public/mock/base64'
 import { formatAddress } from '@/utils/formatter'
+
+import { Card } from '../Card'
+
+import '@testing-library/jest-dom'
 
 
 describe('Card component test', () => {

@@ -1,6 +1,5 @@
 import { Card, CardProps } from '@/components/Card';
 import { Spinner } from '@/icons/Spinner';
-import React from 'react'
 
 type CollectionProps = {
     ownerAddress: string;

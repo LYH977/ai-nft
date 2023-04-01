@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react'
-import { Collection } from '../Collection'
-import { mockCreatedAt, mockDesc, mockImgName, mockOwnerAddress, mockTokenURI } from '@/mockData'
-import '@testing-library/jest-dom'
 
 import { CardProps } from '@/components/Card'
+import { mockCreatedAt, mockDesc, mockImgName, mockOwnerAddress, mockTokenURI } from '@/mockData'
+
+import { Collection } from '../Collection'
+import '@testing-library/jest-dom'
 
 jest.mock('@/icons/Spinner', () => ({
     Spinner: <div>Spinner</div>

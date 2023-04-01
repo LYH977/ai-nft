@@ -1,6 +1,5 @@
 import { cx } from '@/lib/cx';
 import { formatAddress } from '@/utils/formatter';
-import React from 'react'
 
 export type CardProps = {
     description: string

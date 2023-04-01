@@ -1,3 +1,7 @@
+import { act, renderHook, waitFor } from '@testing-library/react'
+import axios from 'axios'
+import { toast } from 'react-toastify'
+
 import {
   getMockServerErrorResponse,
   getMockServerSuccessResponse,
@@ -12,9 +16,7 @@ import {
   mockTotalSupply,
 } from '@/mockData'
 import { base64 } from '@/public/mock/base64'
-import { act, renderHook, waitFor } from '@testing-library/react'
-import axios from 'axios'
-import { toast } from 'react-toastify'
+
 import { useNFT } from '../useNFT'
 
 jest.mock('react-toastify', () => ({

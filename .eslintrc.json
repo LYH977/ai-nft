@@ -7,7 +7,9 @@
     "eslint:recommended",
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:jsx-a11y/recommended"
+    "plugin:jsx-a11y/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings"
   ],
   "overrides": [],
   "parser": "@typescript-eslint/parser",
@@ -20,8 +22,16 @@
     "@typescript-eslint",
     "jsx-a11y",
     "testing-library",
-    "jest-dom"
+    "jest-dom",
+    "import"
   ],
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "project": "./tsconfig.json"
+      }
+    }
+  },
   "rules": {
     "semi": "off",
     "react/react-in-jsx-scope": "off",
@@ -33,6 +43,22 @@
     "jest-dom/prefer-enabled-disabled": "error",
     "jest-dom/prefer-required": "error",
     "jest-dom/prefer-to-have-attribute": "error",
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index",
+          "unknown"
+        ],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ]
   }
 }

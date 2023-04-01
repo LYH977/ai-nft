@@ -1,7 +1,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from 'next'
-import pinataSDK from '@pinata/sdk'
 import { Readable } from 'stream'
+
+import pinataSDK from '@pinata/sdk'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 const pinata = new pinataSDK({
   pinataApiKey: process.env.PINATA_API_KEY,

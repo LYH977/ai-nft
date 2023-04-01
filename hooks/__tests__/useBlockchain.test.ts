@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { MockContract, mockOwnerAddress, mockProvider } from '@/mockData'
-import { CONTRACT_ADDRESS } from '@/utils/constants'
 import { renderHook, waitFor } from '@testing-library/react'
 import { ethers } from 'ethers'
 import { toast } from 'react-toastify'
+
+import { MockContract, mockOwnerAddress, mockProvider } from '@/mockData'
+
 import NFT from '../../artifacts/contracts/NFT.sol/NFT.json'
 import { useBlockchain } from '../useBlockchain'
 
