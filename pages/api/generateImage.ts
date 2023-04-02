@@ -9,7 +9,6 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const { description } = req.body
-  console.log({ description })
   try {
     const response = await axios.post(
       HUGGING_FACE_API,

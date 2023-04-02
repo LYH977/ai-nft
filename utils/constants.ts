@@ -13,6 +13,6 @@ const SEPOLIA_CONTRACT_ADDRESS = '0xDCa2A3eE1Af422106694D1bB729891384904DabD'
 export const SEPOLIA_CHAIN_ID = 11155111
 
 export const CONTRACT_ADDRESS =
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
     ? SEPOLIA_CONTRACT_ADDRESS
     : HARDHAT_CONTRACT_ADDRESS

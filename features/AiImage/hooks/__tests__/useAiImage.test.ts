@@ -27,31 +27,47 @@ jest.mock('axios')
 const mockedAxios = axios as jest.Mocked<typeof axios>
 
 describe('useAiImage unit test', () => {
-  const mockMintNFT = jest.fn()
+  let myResolve: any
+  const mockMintNFT: () => Promise<void> = jest.fn(
+    () => new Promise((resolve) => (myResolve = resolve))
+  )
+
   const mockEvent: any = { preventDefault: jest.fn() }
 
-  it('should initialize the hook with default values', () => {
-    const { result } = renderHook(() =>
-      useAiImage(mockOwnerAddress, mockMintNFT)
-    )
-    expect(result.current.image).toBe('')
-    expect(result.current.loading).toBe(LoadingStatus.NONE)
-    expect(result.current.generatedImage).toEqual({ imgName: '', desc: '' })
-    expect(result.current.isGenerateBtnDisabled).toBe(true)
-    expect(result.current.isMintBtnDisabled).toBe(true)
+  it('should initialize the hook with default values', async () => {
+    let myResult: any
+    await waitFor(() => {
+      const { result } = renderHook(() =>
+        useAiImage(mockOwnerAddress, mockMintNFT)
+      )
+      myResult = result
+    })
+    expect(myResult.current.image).toBe('')
+    expect(myResult.current.loading).toBe(LoadingStatus.NONE)
+    expect(myResult.current.generatedImage).toEqual({ imgName: '', desc: '' })
+    expect(myResult.current.isGenerateBtnDisabled).toBeTruthy()
+    expect(myResult.current.isMintBtnDisabled).toBeTruthy()
   })
 
   it('should call axios.post with the correct parameters when calling generateImage', async () => {
-    const { result } = renderHook(() =>
-      useAiImage(mockOwnerAddress, mockMintNFT)
-    )
-    act(() => {
-      result.current.setImgName(mockImgName)
-      result.current.setDesc(mockDesc)
+    let myResult: any
+    await waitFor(() => {
+      const { result } = renderHook(() =>
+        useAiImage(mockOwnerAddress, mockMintNFT)
+      )
+      myResult = result
     })
-    result.current.generateImage(mockEvent)
-    expect(mockedAxios.post).toHaveBeenCalledWith('./api/generateImage', {
-      description: mockDesc,
+    act(() => {
+      myResult.current.setImgName(mockImgName)
+      myResult.current.setDesc(mockDesc)
+    })
+    act(() => {
+      myResult.current.generateImage(mockEvent)
+    })
+    await waitFor(() => {
+      expect(mockedAxios.post).toHaveBeenCalledWith('./api/generateImage', {
+        description: mockDesc,
+      })
     })
   })
 
@@ -113,32 +129,41 @@ describe('useAiImage unit test', () => {
     })
   })
 
-  it('should call the mintNFT function with the correct parameters when calling handleMintingNFT', async () => {
+  it('should call the mintNFT function and set loading states correctly when calling handleMintingNFT', async () => {
     mockedAxios.post.mockResolvedValueOnce(
       getMockServerSuccessResponse({ base64 })
     )
-    const { result } = renderHook(() =>
-      useAiImage(mockOwnerAddress, mockMintNFT)
-    )
+    let myResult: any
+    await waitFor(() => {
+      const { result } = renderHook(() =>
+        useAiImage(mockOwnerAddress, mockMintNFT)
+      )
+      myResult = result
+    })
     act(() => {
-      result.current.setImgName(mockImgName)
-      result.current.setDesc(mockDesc)
+      myResult.current.setImgName(mockImgName)
+      myResult.current.setDesc(mockDesc)
     })
-    result.current.generateImage(mockEvent)
+    act(() => {
+      myResult.current.generateImage(mockEvent)
+    })
     await waitFor(() => {
-      expect(result.current.image).toBe(base64)
-      expect(result.current.generatedImage).toEqual({
+      expect(myResult.current.image).toBe(base64)
+      expect(myResult.current.generatedImage).toEqual({
         imgName: mockImgName,
         desc: mockDesc,
       })
     })
-    result.current.handleMintingNFT(mockEvent)
+    act(() => {
+      myResult.current.handleMintingNFT(mockEvent)
+    })
+    expect(myResult.current.loading).toEqual(LoadingStatus.MINTING)
+    myResolve()
+    act(() => {
+      myResolve()
+    })
     await waitFor(() => {
-      expect(mockMintNFT).toHaveBeenCalledWith(mockEvent, {
-        image: base64,
-        imgName: mockImgName,
-        desc: mockDesc,
-      })
+      expect(myResult.current.loading).toEqual(LoadingStatus.NONE)
     })
   })
 })

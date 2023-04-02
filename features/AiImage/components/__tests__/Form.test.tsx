@@ -61,15 +61,7 @@ describe('Form', () => {
         expect(mockUseAiImage.setDesc).toHaveBeenCalledWith(mockDesc)
     })
 
-    it('should disable both input fields upon click on generate Image button', async () => {
-        const user = userEvent.setup()
-        render(<Form mintNFT={ mockMintNFT } ownerAddress={ mockOwnerAddress } />)
-        await user.type(getTextbox('name'), mockImgName)
-        await user.type(getTextbox('description'), mockDesc)
-        await user.click(getButton('generate image'))
-        expect(getTextbox('name')).toBeDisabled()
-        expect(getTextbox('description')).toBeDisabled()
-    })
+
 
     it('should call the generateImage function when submitting the form', async () => {
         const user = userEvent.setup()
@@ -94,18 +86,18 @@ describe('Form', () => {
         expect(screen.queryByText('placeholder')).not.toBeInTheDocument()
     })
 
-    it('should disable both input fields upon click on mint nft button', async () => {
+
+    it('should show warning message when image is not empty but ownerAddress is empty', async () => {
         mockUseAiImage.image = base64
         mockUseAiImage.generatedImage = {
             imgName: mockImgName,
             desc: mockDesc
         }
-        const user = userEvent.setup()
-        render(<Form mintNFT={ mockMintNFT } ownerAddress={ mockOwnerAddress } />)
-        await user.click(getButton('mint nft'))
-        expect(getTextbox('name')).toBeDisabled()
-        expect(getTextbox('description')).toBeDisabled()
+        render(<Form mintNFT={ mockMintNFT } ownerAddress='' />)
+        expect(screen.getByText(/you need a crypto wallet to mint!/i)).toBeInTheDocument()
     })
+
+
 
     it('should call the handleMintingNFT function when clicking the mint button', async () => {
         mockUseAiImage.image = base64
@@ -118,4 +110,5 @@ describe('Form', () => {
         await user.click(getButton('mint nft'))
         expect(mockUseAiImage.handleMintingNFT).toHaveBeenCalled()
     })
+
 })

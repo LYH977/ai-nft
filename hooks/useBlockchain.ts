@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import MyContract from '@/public/MyContract.json'
 import { CONTRACT_ADDRESS, SEPOLIA_CHAIN_ID } from '@/utils/constants'
 
 export const useBlockchain = () => {
-  const w = global.window as any
-
+  const w = global.window
+  const isNotSepolia = (chainId: number) => chainId !== SEPOLIA_CHAIN_ID
   const [ownerAddress, setOwnerAddress] = useState<string>('')
   const [provider, setProvider] = useState<any>()
   const [smartContract, setSmartContract] = useState<any>()
-
+  const providerRef = useRef<any>()
   const loadBlockchainData = async () => {
     if (w.ethereum) {
       try {
@@ -19,16 +19,13 @@ export const useBlockchain = () => {
         })
         const { ethers } = await import('ethers')
         const newProvider: any = new ethers.providers.Web3Provider(w.ethereum)
-        const network = await newProvider.getNetwork()
-        if (
-          process.env.NODE_ENV === 'production' &&
-          network.chainId !== SEPOLIA_CHAIN_ID
-        ) {
+        const { chainId } = await newProvider.getNetwork()
+        if (isNotSepolia(chainId)) {
           toast.warning('Sepolia testnet is not detected')
           return
         }
         setProvider(newProvider)
-        // setOwnerAddress(await (await newProvider.getSigner()).getAddress())
+        providerRef.current = newProvider
         setOwnerAddress(address[0])
         setSmartContract(
           new ethers.Contract(CONTRACT_ADDRESS, MyContract.abi, newProvider)
@@ -46,30 +43,29 @@ export const useBlockchain = () => {
   }
 
   useEffect(() => {
-    const detectAccountChanged = async () => {
-      if (w.ethereum) {
-        try {
-          w.ethereum.on('accountsChanged', async (accounts: any) => {
-            const network = await provider.getNetwork()
-            if (network.chainId !== SEPOLIA_CHAIN_ID) {
-              toast.warning('Sepolia testnet is not detected')
-              return
-            }
-
-            setOwnerAddress(accounts[0])
-            toast.success(`Account changed to ${accounts[0]}`)
-          })
-        } catch (error) {
-          toast.warning(
-            'New crypto wallet is not detected!. Please refresh the page.'
-          )
-        }
-      }
-    }
     const detectChainChange = () => {
       if (w.ethereum) {
         w.ethereum.on('chainChanged', () => {
           window.location.reload()
+        })
+      }
+    }
+    const detectAccountChanged = async () => {
+      if (w.ethereum) {
+        w.ethereum.on('accountsChanged', async (accounts: any) => {
+          try {
+            const { chainId } = await providerRef.current.getNetwork()
+            if (isNotSepolia(chainId)) {
+              toast.warning('Sepolia testnet is no longer detected')
+              return
+            }
+            setOwnerAddress(accounts[0])
+            toast.success(`Account changed to ${accounts[0]}`)
+          } catch (error) {
+            toast.warning(
+              'New crypto wallet is not detected!. Please refresh the page.'
+            )
+          }
         })
       }
     }

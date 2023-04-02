@@ -2,7 +2,6 @@ import axios from 'axios'
 import React, { useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { bigbase64 } from '@/public/mock/bigBase64'
 import { ImageInfoProps } from '@/types'
 
 import { LoadingStatus } from '../enums'

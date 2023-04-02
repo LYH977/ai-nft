@@ -5,15 +5,14 @@ import { toast } from 'react-toastify'
 import {
   getMockServerErrorResponse,
   getMockServerSuccessResponse,
-  MockContract2,
+  MockContract,
   mockCreatedAt,
   mockDesc,
   mockImgName,
   mockOwnerAddress,
-  mockProvider,
-  MockProvider2,
   mockTokenURI,
   mockTotalSupply,
+  MockProvider,
 } from '@/mockData'
 import { base64 } from '@/public/mock/base64'
 
@@ -31,8 +30,11 @@ jest.mock('axios')
 const mockedAxios = axios as jest.Mocked<typeof axios>
 
 describe('useNFT unit test', () => {
-  const mockEvent: any = { preventDefault: jest.fn() }
+  const mockContractObject = new MockContract()
+  const mockProviderObject = new MockProvider()
 
+  const mockEvent: any = { preventDefault: jest.fn() }
+  const mockSetImage = jest.fn()
   beforeAll(() => {
     mockedAxios.get.mockResolvedValue(
       getMockServerSuccessResponse({
@@ -42,9 +44,12 @@ describe('useNFT unit test', () => {
       })
     )
   })
+  afterEach(() => {
+    mockContractObject.clearIndex()
+  })
   it('should return an empty collection and a loading state initially with undefined contract variable', () => {
     const { result } = renderHook(() =>
-      useNFT(undefined, mockProvider, mockOwnerAddress)
+      useNFT(undefined, mockProviderObject, mockOwnerAddress)
     )
     expect(result.current.collection).toEqual([])
     expect(result.current.isFetchingNft).toBeFalsy()
@@ -52,7 +57,7 @@ describe('useNFT unit test', () => {
 
   it('should fetch the NFT collection from the smart contract and IPFS', async () => {
     const { result } = renderHook(() =>
-      useNFT(new MockContract2(), new MockProvider2(), mockOwnerAddress)
+      useNFT(mockContractObject, mockProviderObject, mockOwnerAddress)
     )
     expect(result.current.isFetchingNft).toBeTruthy()
     const newCollection = [...Array(mockTotalSupply)].map((_, index) => ({
@@ -75,7 +80,7 @@ describe('useNFT unit test', () => {
       })
     )
     const { result } = renderHook(() =>
-      useNFT(new MockContract2(), new MockProvider2(), mockOwnerAddress)
+      useNFT(mockContractObject, mockProviderObject, mockOwnerAddress)
     )
 
     act(() => {
@@ -83,29 +88,34 @@ describe('useNFT unit test', () => {
         imgName: mockImgName,
         image: base64,
         desc: mockDesc,
+        setImage: mockSetImage,
       })
     })
+
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith('Minted NFT!')
-      // expect(result.current.collection).toContain({
-      //   owner: mockOwnerAddress,
-      //   path: base64,
-      //   name: mockImgName,
-      //   createdAt: mockCreatedAt,
-      //   description: mockDesc,
-      // })
+      expect(result.current.collection).toEqual(
+        [...Array(mockTotalSupply)].map((number, index) => ({
+          owner: mockOwnerAddress,
+          path: mockTokenURI + (index + 1),
+          name: mockImgName,
+          createdAt: mockCreatedAt,
+          description: mockDesc,
+        }))
+      )
     })
   })
   it('should show a toast when calling mintNFT successfully but not status 200', async () => {
     mockedAxios.post.mockResolvedValueOnce(getMockServerErrorResponse())
     const { result } = renderHook(() =>
-      useNFT(new MockContract2(), new MockProvider2(), mockOwnerAddress)
+      useNFT(mockContractObject, mockProviderObject, mockOwnerAddress)
     )
     act(() => {
       result.current.mintNFT(mockEvent, {
         imgName: mockImgName,
         image: base64,
         desc: mockDesc,
+        setImage: mockSetImage,
       })
     })
     await waitFor(() => {
@@ -118,13 +128,14 @@ describe('useNFT unit test', () => {
   it('should show a toast when calling mintNFT unsuccessfully', async () => {
     mockedAxios.post.mockRejectedValueOnce(getMockServerErrorResponse())
     const { result } = renderHook(() =>
-      useNFT(new MockContract2(), new MockProvider2(), mockOwnerAddress)
+      useNFT(mockContractObject, mockProviderObject, mockOwnerAddress)
     )
     act(() => {
       result.current.mintNFT(mockEvent, {
         imgName: mockImgName,
         image: base64,
         desc: mockDesc,
+        setImage: mockSetImage,
       })
     })
     await waitFor(() => {
