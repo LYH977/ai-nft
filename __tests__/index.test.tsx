@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 
 import '@testing-library/jest-dom'
-import Home from '..'
+import Home from '../pages'
 
 describe('Homepange Ui unit test', () => {
 
