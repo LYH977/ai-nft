@@ -9,13 +9,16 @@ let mockPinFileToIPFS = () => ({
   IpfsHash: mockTokenURI,
   Timestamp: mockCreatedAt,
 })
-jest.mock('@pinata/sdk', () => {
-  return function (this: any) {
-    this.pinFileToIPFS = async function () {
-      return mockPinFileToIPFS()
+
+jest.mock(
+  '@pinata/sdk',
+  () =>
+    class {
+      async pinFileToIPFS() {
+        return mockPinFileToIPFS()
+      }
     }
-  }
-})
+)
 
 describe('uploadIpfs function', () => {
   const req: jest.Mocked<NextApiRequest> = {

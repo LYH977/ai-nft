@@ -140,7 +140,7 @@ describe('useNFT unit test', () => {
     })
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
-        'Oops. something is wrong now. Please come back later.'
+        'Something wrong with crypto wallet. Maybe clear tab data and try again.'
       )
     })
   })

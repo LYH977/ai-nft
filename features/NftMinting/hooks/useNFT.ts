@@ -2,26 +2,25 @@ import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { mockCreatedAt, mockTokenURI } from '@/mockData'
 import { ImageInfoProps } from '@/types'
+
+import { NftProps } from '../types'
 
 export const useNFT = (
   smartContract: any,
   provider: any,
   ownerAddress: string
 ) => {
-  const [collection, setCollection] = useState<any>([])
+  const [collection, setCollection] = useState<NftProps[]>([])
   const [isFetchingNft, setIsFetchingNft] = useState(false)
 
   useEffect(() => {
     const fetchNftCollection = async () => {
       setIsFetchingNft(true)
       const total = await smartContract.totalSupply()
-      const newCollection: any = []
+      const newCollection: NftProps[] = []
       const lastIndex = Number(total)
       for (let i = lastIndex; i > 0; i--) {
-        // ownerPromises.push(smartContract.ownerOf(i))
-        // pathPromises.push(smartContract.tokenURI(i))
         const path = await smartContract.tokenURI(i)
         const hash = path.split('/').pop()
         const {
@@ -70,7 +69,7 @@ export const useNFT = (
         await transaction.wait()
         toast.success('Minted NFT!')
         setImage('')
-        setCollection((collection: any) => [
+        setCollection((collection: NftProps[]) => [
           {
             owner: ownerAddress,
             path: image,
@@ -87,7 +86,9 @@ export const useNFT = (
       }
     } catch (e) {
       console.error(e)
-      toast.error('Oops. something is wrong now. Please come back later.')
+      toast.error(
+        'Something wrong with crypto wallet. Maybe clear tab data and try again.'
+      )
     }
   }
   return { mintNFT, collection, isFetchingNft }

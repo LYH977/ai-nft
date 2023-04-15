@@ -124,7 +124,7 @@ describe('useAiImage unit test', () => {
     result.current.generateImage(mockEvent)
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
-        'Oops. something is wrong now. Please come back later.'
+        'Sorry, something went wrong. Please try again.'
       )
     })
   })

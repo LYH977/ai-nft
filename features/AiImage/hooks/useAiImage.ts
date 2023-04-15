@@ -6,6 +6,8 @@ import { ImageInfoProps } from '@/types'
 
 import { LoadingStatus } from '../enums'
 
+type imageProps = { imgName: string; desc: string }
+
 export const useAiImage = (
   ownerAddress: string | undefined,
   mintNFT: (
@@ -18,7 +20,7 @@ export const useAiImage = (
   const [image, setImage] = useState('')
   const [loading, setLoading] = useState<LoadingStatus>(LoadingStatus.NONE)
 
-  const generatedImage = useRef<any>({ imgName: '', desc: '' })
+  const generatedImage = useRef<imageProps>({ imgName: '', desc: '' })
 
   const isGenerateBtnDisabled =
     !(imgName && desc) || loading !== LoadingStatus.NONE
@@ -49,7 +51,7 @@ export const useAiImage = (
       }
     } catch (err) {
       console.error(err)
-      toast.error('Oops. something is wrong now. Please come back later.')
+      toast.error('Sorry, something went wrong. Please try again.')
     } finally {
       setLoading(LoadingStatus.NONE)
     }

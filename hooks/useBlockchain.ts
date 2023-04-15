@@ -1,3 +1,5 @@
+import { Web3Provider } from '@ethersproject/providers'
+import { Contract } from 'ethers'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 
@@ -7,10 +9,10 @@ import { CONTRACT_ADDRESS, SEPOLIA_CHAIN_ID } from '@/utils/constants'
 export const useBlockchain = () => {
   const w = global.window
   const isNotSepolia = (chainId: number) => chainId !== SEPOLIA_CHAIN_ID
-  const [ownerAddress, setOwnerAddress] = useState<string>('')
-  const [provider, setProvider] = useState<any>()
-  const [smartContract, setSmartContract] = useState<any>()
-  const providerRef = useRef<any>()
+  const [ownerAddress, setOwnerAddress] = useState('')
+  // const [provider, setProvider] = useState<Web3Provider>()
+  const [smartContract, setSmartContract] = useState<Contract>()
+  const providerRef = useRef<Web3Provider>()
   const loadBlockchainData = async () => {
     if (w.ethereum) {
       try {
@@ -24,13 +26,12 @@ export const useBlockchain = () => {
           toast.warning('Sepolia testnet is not detected')
           return
         }
-        setProvider(newProvider)
+        // setProvider(newProvider)
         providerRef.current = newProvider
         setOwnerAddress(address[0])
         setSmartContract(
           new ethers.Contract(CONTRACT_ADDRESS, MyContract.abi, newProvider)
         )
-
         toast.success('Crypto wallet is connected!')
       } catch (e) {
         toast.warning(
@@ -54,7 +55,9 @@ export const useBlockchain = () => {
       if (w.ethereum) {
         w.ethereum.on('accountsChanged', async (accounts: any) => {
           try {
-            const { chainId } = await providerRef.current.getNetwork()
+            const { chainId } = await (
+              providerRef.current as Web3Provider
+            ).getNetwork()
             if (isNotSepolia(chainId)) {
               toast.warning('Sepolia testnet is no longer detected')
               return
@@ -74,5 +77,10 @@ export const useBlockchain = () => {
     loadBlockchainData()
   }, [])
 
-  return { ownerAddress, loadBlockchainData, provider, smartContract }
+  return {
+    ownerAddress,
+    loadBlockchainData,
+    provider: providerRef.current,
+    smartContract,
+  }
 }

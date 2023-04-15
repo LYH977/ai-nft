@@ -26,7 +26,7 @@ describe('Form', () => {
     })
     beforeEach(() => {
         mockUseAiImage = {
-            generateImage: jest.fn(),
+            generateImage: jest.fn(e => e.preventDefault()),
             setImgName: jest.fn(),
             setDesc: jest.fn(),
             handleMintingNFT: jest.fn(),
